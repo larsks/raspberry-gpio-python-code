@@ -36,6 +36,7 @@ struct pwm
     float slicetime;
     struct timespec req_on, req_off;
     int running;
+    pthread_t tid;
     struct pwm *next;
 };
 struct pwm *pwm_list = NULL;
@@ -197,7 +198,7 @@ void pwm_start(unsigned int gpio)
         return;
 
     p->running = 1;
-    if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0)
+    if (pthread_create(&(p->tid), NULL, pwm_thread, (void *)p) != 0)
     {
         // btc fixme - error
         p->running = 0;
@@ -209,6 +210,8 @@ void pwm_stop(unsigned int gpio)
 {
     struct pwm *p;
 
-    if ((p = find_pwm(gpio)) != NULL)
+    if ((p = find_pwm(gpio)) != NULL) {
         p->running = 0;
+	pthread_join(p->tid, NULL);
+    }
 }
